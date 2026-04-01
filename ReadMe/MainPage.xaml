@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReadMe.MainPage"
+             BackgroundColor="White">
+
+    <Shell.TitleView >
+        <Grid HorizontalOptions="FillAndExpand" BackgroundColor="#0F172A">
+            <Label Text="NurBücher" 
+                   TextColor="White"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center" />
+        </Grid>
+    </Shell.TitleView>
+
+    <Grid RowDefinitions="*, Auto">
+
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="20" Spacing="10">
+
+                <Label Text="Derniers livres" 
+                   FontSize="28" 
+                   FontAttributes="Bold" 
+                   TextColor="Black"
+                   HorizontalOptions="Center" 
+                   Margin="0,10,0,10"/>
+
+                <Frame CornerRadius="25" 
+                   HeightRequest="50" 
+                   Padding="15,0" 
+                   Margin="0,0,0,10" 
+                   BorderColor="#E0E0E0" 
+                   HasShadow="False"
+                   BackgroundColor="White">
+                    <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="10">
+                        <Image Grid.Column="0" Source="search_icon.png" HeightRequest="18" VerticalOptions="Center" />
+                        <Entry Grid.Column="1" Placeholder="Chercher un livre" PlaceholderColor="Gray" TextColor="Black" VerticalOptions="Center" />
+                        <Image Grid.Column="2" Source="filter_icon.png" HeightRequest="18" VerticalOptions="Center" />
+                    </Grid>
+                </Frame>
+
+                <CollectionView ItemsSource="{Binding Books}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame CornerRadius="30" 
+                   HasShadow="False" 
+                   BorderColor="#B0B0B0" 
+                   Margin="0,8" 
+                   Padding="12"
+                   BackgroundColor="#F5F5F5">
+
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnBookTapped" 
+                                          CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
+
+                                <Grid ColumnDefinitions="70, *" ColumnSpacing="15">
+
+                                    <Frame Grid.Column="0" Padding="0" CornerRadius="5" HeightRequest="90">
+                                        <BoxView Color="White" />
+                                    </Frame>
+
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18" TextColor="Black"/>
+                                        <Label Text="{Binding Author}" TextColor="#606060" FontSize="14"/>
+
+                                        <Label Text="{Binding LastPageOpened, StringFormat='Page {0}'}" 
+                               FontSize="10" TextColor="Black" Margin="0,5"/>
+
+                                        <ProgressBar Progress="{Binding Progress}" ProgressColor="Green" ScaleY="1.5"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="1" BackgroundColor="#0F172A" Padding="15">
+            <Label Text="OnlyBooks" TextColor="White" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
+            <Label Text="©2026 - toutes les droits reservées" TextColor="#94A3B8" FontSize="11" HorizontalOptions="Center" Margin="0,5,0,0"/>
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentPage>

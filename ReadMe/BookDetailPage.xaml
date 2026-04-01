@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReadMe.BookDetailPage"
+             BackgroundColor="White">
+
+    <Shell.TitleView>
+        <Grid HorizontalOptions="Fill" BackgroundColor="#0F172A">
+            <Label Text="OnlyBooks" TextColor="White" FontSize="24" 
+                    FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+        </Grid>
+    </Shell.TitleView>
+
+    <Grid RowDefinitions="Auto, *, Auto, Auto">
+
+        <Label Grid.Row="0" 
+               Text="{Binding LastPageOpened, StringFormat='Page {0} sur 667'}" 
+               FontSize="28" FontAttributes="Bold" TextColor="Black"
+               HorizontalOptions="Center" Margin="0,20"/>
+
+        <ScrollView Grid.Row="1" Padding="20">
+            <Label Text="wjbfwejfbejhfbefknefewfwe&#10;fef&#10;ef&#10;e&#10;fe&#10;fwe&#10;f&#10;wefe&#10;fef&#10;wef" 
+                   TextColor="Black" FontSize="18" LineHeight="1.5" />
+        </ScrollView>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*, *, *" Padding="10" ColumnSpacing="10">
+            <Button Grid.Column="0" Text="←" BackgroundColor="White" BorderColor="Gray" BorderWidth="1" TextColor="Black" FontSize="30"/>
+            <Frame Grid.Column="1" BorderColor="Gray" Padding="0" HeightRequest="50">
+                <Label Text="{Binding LastPageOpened}" HorizontalOptions="Center" VerticalOptions="Center" TextColor="Black"/>
+            </Frame>
+            <Button Grid.Column="2" Text="→" BackgroundColor="White" BorderColor="Gray" BorderWidth="1" TextColor="Black" FontSize="30"/>
+        </Grid>
+
+        <VerticalStackLayout Grid.Row="3" BackgroundColor="#0F172A" Padding="15">
+            <Label Text="OnlyBooks" TextColor="White" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
+            <Label Text="©2026 - toutes les droits reservées" TextColor="#94A3B8" FontSize="11" HorizontalOptions="Center" Margin="0,5,0,0"/>
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>
