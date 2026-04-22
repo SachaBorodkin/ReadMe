@@ -4,15 +4,13 @@ namespace ReadMe
 {
     public partial class MainPage : ContentPage
     {
-        int count = 0;
-
         public MainPage(MainViewModel viewModel)
         {
             InitializeComponent();
             BindingContext = viewModel;
-            System.Diagnostics.Debug.WriteLine($"DATABASE PATH: {Path.Combine(FileSystem.AppDataDirectory, "OnlyBooks.db3")}");
+            System.Diagnostics.Debug.WriteLine($"DATABASE PATH: {Path.Combine(FileSystem.AppDataDirectory, "api.db")}");
         }
-        bool isNavigating = false;
+
         private async void OnBookTapped(object sender, TappedEventArgs e)
         {
             // The CommandParameter "{Binding .}" sends the whole Book object here

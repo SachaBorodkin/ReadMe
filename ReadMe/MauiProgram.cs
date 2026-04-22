@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using ReadMe.Services;
 using ReadMe.ViewModels;
 namespace ReadMe
@@ -16,11 +17,14 @@ namespace ReadMe
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-#if DEBUG
+            // Register services
             builder.Services.AddSingleton<DatabaseService>();
+            builder.Services.AddSingleton<BookApiService>();
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<MainPage>();
-            builder.Services.AddSingleton<App>();
+
+#if DEBUG
+
             builder.Logging.AddDebug();
 #endif
 
