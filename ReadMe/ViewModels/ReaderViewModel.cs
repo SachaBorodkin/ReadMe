@@ -99,8 +99,7 @@ namespace ReadMe.ViewModels
 
                     using (var client = new HttpClient())
                     {
-
-                        var downloadUrl = $"http:
+                        var downloadUrl = $"http://10.0.2.2:3000/files/{epubFileName}";
                         System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Downloading from: {downloadUrl}");
 
                         var response = await client.GetAsync(downloadUrl);
@@ -119,7 +118,19 @@ namespace ReadMe.ViewModels
 
                 _epubContent = await _epubReaderService.LoadEpubAsync(epubPath);
 
-                CurrentChapterIndex = book.LastPageOpened;
+                int desiredIndex = 0;
+                if (book != null)
+                {
+                    desiredIndex = book.LastPageOpened;
+                }
+
+                // Clamp to available chapters
+                if (_epubContent?.Chapters != null && _epubContent.Chapters.Count > 0)
+                {
+                    desiredIndex = Math.Clamp(desiredIndex, 0, _epubContent.Chapters.Count - 1);
+                }
+
+                CurrentChapterIndex = desiredIndex;
                 LoadChapter(CurrentChapterIndex);
 
                 System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Book loaded successfully with {TotalChapters} chapters");
@@ -142,7 +153,8 @@ namespace ReadMe.ViewModels
                 var chapter = _epubContent.Chapters[chapterIndex];
                 CurrentChapterTitle = chapter.Title;
                 CurrentChapterContent = chapter.HtmlContent;
-
+                // Save progress asynchronously when changing chapters
+                _ = SaveProgressAsync();
                 System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Loaded chapter {chapterIndex + 1}: {chapter.Title}");
             }
             catch (Exception ex)

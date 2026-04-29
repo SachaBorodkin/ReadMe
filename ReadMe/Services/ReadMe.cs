@@ -14,13 +14,13 @@ namespace ReadMe.Services
         {
 #if DEBUG
             if (DeviceInfo.Platform == DevicePlatform.Android)
-                return "http:
+                return "http://10.0.2.2:3000/books";
             else if (DeviceInfo.Platform == DevicePlatform.iOS)
-                return "http:
+                return "http://localhost:3000/books";
             else
-                return "http:
+                return "http://127.0.0.1:3000/books";
 #else
-            return "http:
+            return "http://127.0.0.1:3000/books";
 #endif
         }
 

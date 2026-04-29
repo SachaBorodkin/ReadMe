@@ -75,7 +75,7 @@
                                         <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18" TextColor="Black"/>
                                         <Label Text="{Binding Author}" TextColor="#606060" FontSize="14"/>
 
-                                        <Label Text="{Binding LastPageOpened, StringFormat='Page {0}'}" 
+                                        <Label Text="{Binding DisplayPage, StringFormat='Page {0}'}" 
                                FontSize="10" TextColor="Black" Margin="0,5"/>
 
                                         <ProgressBar Progress="{Binding Progress}" ProgressColor="Green" ScaleY="1.5"/>

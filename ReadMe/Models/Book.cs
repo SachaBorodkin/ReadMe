@@ -45,5 +45,8 @@ namespace ReadMe.Models
 
         [Ignore]
         public double Progress => TotalPages > 0 ? (double)LastPageOpened / TotalPages : 0;
+
+        [Ignore]
+        public int DisplayPage => LastPageOpened + 1;
     }
 }

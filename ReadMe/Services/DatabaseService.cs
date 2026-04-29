@@ -38,9 +38,30 @@ namespace ReadMe.Services
             try
             {
 
-                var result = await _database.InsertAsync(book);
-                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Insert result: {result}");
-                return result;
+                Book existing = null;
+                if (!string.IsNullOrEmpty(book.EpubFilePath))
+                {
+                    existing = await _database.Table<Book>().Where(b => b.EpubFilePath == book.EpubFilePath).FirstOrDefaultAsync();
+                }
+
+                if (existing == null && book.Id != 0)
+                {
+                    existing = await _database.FindAsync<Book>(book.Id);
+                }
+
+                if (existing == null)
+                {
+                    var result = await _database.InsertAsync(book);
+                    System.Diagnostics.Debug.WriteLine($"[DatabaseService] Insert result: {result}");
+                    return result;
+                }
+                else
+                {
+                    book.Id = existing.Id;
+                    var result = await _database.UpdateAsync(book);
+                    System.Diagnostics.Debug.WriteLine($"[DatabaseService] Update result: {result}");
+                    return result;
+                }
             }
             catch (Exception ex)
             {

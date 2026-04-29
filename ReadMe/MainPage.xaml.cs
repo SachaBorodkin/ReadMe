@@ -23,5 +23,14 @@ namespace ReadMe
             }
         }
 
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            if (BindingContext is MainViewModel vm)
+            {
+                await vm.LoadBooksAsync();
+            }
+        }
+
     }
 }

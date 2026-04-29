@@ -58,13 +58,13 @@ namespace ReadMe.Services
                     using (var reader = new StreamReader(stream))
                     {
                         var opfXml = XDocument.Parse(await reader.ReadToEndAsync());
-                        var opfNs = XNamespace.Get("http:
+                        var opfNs = XNamespace.Get("http://www.idpf.org/2007/opf");
 
                         var metadata = opfXml.Descendants(opfNs + "metadata").FirstOrDefault();
                         if (metadata != null)
                         {
-                            epubContent.Title = metadata.Descendants(XNamespace.Get("http:
-                            epubContent.Author = metadata.Descendants(XNamespace.Get("http:
+                            epubContent.Title = metadata.Descendants(XNamespace.Get("http://purl.org/dc/elements/1.1/") + "title").FirstOrDefault()?.Value ?? "Unknown";
+                            epubContent.Author = metadata.Descendants(XNamespace.Get("http://purl.org/dc/elements/1.1/") + "creator").FirstOrDefault()?.Value ?? "Unknown";
                         }
 
                         var spine = opfXml.Descendants(opfNs + "spine").FirstOrDefault();

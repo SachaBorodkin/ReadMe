@@ -47,19 +47,26 @@ namespace ReadMe.ViewModels
                 var localBooks = await _localBooksService.LoadLocalBooksAsync();
                 System.Diagnostics.Debug.WriteLine($"[MainViewModel] Local books returned {localBooks?.Count ?? 0} books");
 
+                var existingDbItems = await _dbService.GetBooksAsync();
+
                 if (localBooks != null && localBooks.Count > 0)
                 {
                     System.Diagnostics.Debug.WriteLine($"First book: Title={localBooks[0].Title}, Author={localBooks[0].Author}");
 
-                    await _dbService.DeleteAllBooksAsync();
-                    System.Diagnostics.Debug.WriteLine("Cleared database");
-
                     foreach (var book in localBooks)
                     {
+                        var existing = existingDbItems.FirstOrDefault(b => !string.IsNullOrEmpty(b.EpubFilePath) && b.EpubFilePath == book.EpubFilePath);
+                        if (existing != null)
+                        {
+                            book.Id = existing.Id;
+                            book.LastPageOpened = existing.LastPageOpened;
+                            book.LastOpenedDate = existing.LastOpenedDate;
+                        }
+
                         var result = await _dbService.SaveBookAsync(book);
-                        System.Diagnostics.Debug.WriteLine($"Saved book '{book.Title}' with result: {result}");
+                        System.Diagnostics.Debug.WriteLine($"Saved/Updated book '{book.Title}' with result: {result}");
                     }
-                    System.Diagnostics.Debug.WriteLine($"Saved {localBooks.Count} books to database");
+                    System.Diagnostics.Debug.WriteLine($"Processed {localBooks.Count} local books into database");
                 }
                 else
                 {
