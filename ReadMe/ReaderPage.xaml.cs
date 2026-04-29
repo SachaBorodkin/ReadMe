@@ -124,4 +124,12 @@ public partial class ReaderPage : ContentPage
         _viewModel.PreviousChapter();
         UpdateWebView();
     }
+
+    private void OnMenuClicked(object sender, EventArgs e)
+    {
+        if (Shell.Current != null)
+        {
+            Shell.Current.FlyoutIsPresented = true;
+        }
+    }
 }

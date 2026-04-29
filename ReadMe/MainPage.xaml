@@ -11,87 +11,244 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Shell.TitleView >
-        <Grid HorizontalOptions="FillAndExpand" BackgroundColor="#0F172A">
-            <Label Text="NurBücher" 
-                   TextColor="White"
-                   FontSize="24"
-                   FontAttributes="Bold"
+    <Shell.TitleView>
+        <Grid HorizontalOptions="FillAndExpand" BackgroundColor="#0F172A" Padding="12,8" ColumnDefinitions="Auto, *, Auto">
+            <Button Grid.Column="0"
+                    Text="≡"
+                    Clicked="OnMenuClicked"
+                    BackgroundColor="Transparent"
+                    TextColor="White"
+                    FontSize="22"
+                    WidthRequest="42"
+                    HeightRequest="42"
+                    Padding="0" />
+
+            <Label Grid.Column="1"
                    HorizontalOptions="Center"
-                   VerticalOptions="Center" />
+                   VerticalOptions="Center"
+                   FontSize="22"
+                   FontAttributes="Bold">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Only" TextColor="White" />
+                        <Span Text="Books" TextColor="#14B8A6" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+
+            <BoxView Grid.Column="2" WidthRequest="42" HeightRequest="1" Opacity="0" />
         </Grid>
     </Shell.TitleView>
 
     <Grid RowDefinitions="*, Auto">
+        <Grid Grid.Row="0" Padding="16" RowDefinitions="Auto, Auto, Auto, *" RowSpacing="12">
+            <HorizontalStackLayout Grid.Row="0" Spacing="12" HorizontalOptions="Center">
+                <Button Text="Derniers livres"
+                        Clicked="OnBooksViewClicked"
+                        BackgroundColor="#0F172A"
+                        TextColor="White"
+                        CornerRadius="14"
+                        Padding="16,10" />
+                <Button Text="Tags"
+                        Clicked="OnTagsViewClicked"
+                        BackgroundColor="#E2E8F0"
+                        TextColor="#0F172A"
+                        CornerRadius="14"
+                        Padding="16,10" />
+            </HorizontalStackLayout>
 
-        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" Color="Blue" Scale="1.5" VerticalOptions="Center" HorizontalOptions="Center" />
+            <Label Grid.Row="1"
+                   Text="{Binding CurrentSectionTitle}"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="Black" />
 
-        <ScrollView Grid.Row="0" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}, FallbackValue=true}">
-            <VerticalStackLayout Padding="20" Spacing="10">
-
-                <Label Text="Derniers livres" 
-                   FontSize="28" 
-                   FontAttributes="Bold" 
-                   TextColor="Black"
-                   HorizontalOptions="Center" 
-                   Margin="0,10,0,10"/>
-
-                <Frame CornerRadius="25" 
-                   HeightRequest="50" 
-                   Padding="15,0" 
-                   Margin="0,0,0,10" 
-                   BorderColor="#E0E0E0" 
+            <Frame Grid.Row="2"
+                   CornerRadius="24"
+                   Padding="12"
                    HasShadow="False"
+                   BorderColor="#D1D5DB"
                    BackgroundColor="White">
-                    <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="10">
-                        <Image Grid.Column="0" Source="search_icon.png" HeightRequest="18" VerticalOptions="Center" />
-                        <Entry Grid.Column="1" Placeholder="Chercher un livre" PlaceholderColor="Gray" TextColor="Black" VerticalOptions="Center" />
-                        <Image Grid.Column="2" Source="filter_icon.png" HeightRequest="18" VerticalOptions="Center" />
-                    </Grid>
-                </Frame>
+                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                    <Entry Grid.Column="0"
+                           Text="{Binding SearchText, Mode=TwoWay}"
+                           Placeholder="{Binding SearchPlaceholder}"
+                           PlaceholderColor="#94A3B8"
+                           TextColor="Black"
+                           BackgroundColor="Transparent"
+                           ClearButtonVisibility="WhileEditing" />
+                    <Button Grid.Column="1"
+                            Text="Filtres"
+                            Clicked="OnToggleFiltersClicked"
+                            BackgroundColor="Transparent"
+                            TextColor="#0F172A"
+                            Padding="12,0" />
+                </Grid>
+            </Frame>
 
-                <CollectionView ItemsSource="{Binding Books}">
+            <Frame Grid.Row="3"
+                   IsVisible="{Binding IsBooksView}"
+                   CornerRadius="22"
+                   Padding="12"
+                   HasShadow="False"
+                   BorderColor="#E5E7EB"
+                   BackgroundColor="#F8FAFC">
+                <Grid RowDefinitions="Auto, Auto, *" RowSpacing="12">
+                    <Grid IsVisible="{Binding IsFiltersVisible}" ColumnDefinitions="*, *" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="6">
+                            <Label Text="Date d'ajout" FontSize="12" TextColor="#6B7280" />
+                            <Picker ItemsSource="{Binding SortOptions}"
+                                    SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}"
+                                    TextColor="Black" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="6">
+                            <Label Text="Tag" FontSize="12" TextColor="#6B7280" />
+                            <Picker ItemsSource="{Binding TagFilterOptions}"
+                                    SelectedItem="{Binding SelectedTagFilter, Mode=TwoWay}"
+                                    TextColor="Black" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <CollectionView Grid.Row="2" ItemsSource="{Binding Books}" VerticalOptions="FillAndExpand">
+                        <CollectionView.EmptyView>
+                            <Label Text="Aucun livre"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   TextColor="#64748B" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame CornerRadius="22"
+                                       HasShadow="False"
+                                       BorderColor="#CBD5E1"
+                                       Margin="0,8"
+                                       Padding="12"
+                                       BackgroundColor="White">
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnBookTapped" CommandParameter="{Binding .}" />
+                                    </Frame.GestureRecognizers>
+                                    <Grid ColumnDefinitions="72, *" ColumnSpacing="14">
+                                        <Frame Grid.Column="0" Padding="0" CornerRadius="10" HeightRequest="96" WidthRequest="72" HasShadow="False" BorderColor="#E2E8F0" BackgroundColor="#0F172A">
+                                            <Label Text="EPUB"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#14B8A6" />
+                                        </Frame>
+                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
+                                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18" TextColor="#0F172A" LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding Author}" FontSize="13" TextColor="#64748B" />
+                                            <Label Text="{Binding DisplayPage, StringFormat='Page {0}'}" FontSize="12" TextColor="#111827" />
+                                            <ProgressBar Progress="{Binding Progress}" ProgressColor="#14B8A6" ScaleY="1.3" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Frame>
+
+            <Frame Grid.Row="3"
+                   IsVisible="{Binding IsTagsView}"
+                   CornerRadius="22"
+                   Padding="12"
+                   HasShadow="False"
+                   BorderColor="#E5E7EB"
+                   BackgroundColor="White">
+                <CollectionView ItemsSource="{Binding Tags}" VerticalOptions="FillAndExpand">
+                    <CollectionView.EmptyView>
+                        <Label Text="Aucun tag"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               TextColor="#64748B" />
+                    </CollectionView.EmptyView>
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Frame CornerRadius="30" 
-                   HasShadow="False" 
-                   BorderColor="#B0B0B0" 
-                   Margin="0,8" 
-                   Padding="12"
-                   BackgroundColor="#F5F5F5">
-
-                                <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnBookTapped" 
-                                          CommandParameter="{Binding .}" />
-                                </Frame.GestureRecognizers>
-
-                                <Grid ColumnDefinitions="70, *" ColumnSpacing="15">
-
-                                    <Frame Grid.Column="0" Padding="0" CornerRadius="5" HeightRequest="90">
-                                        <Image Source="{Binding CoverImage}" Aspect="AspectFill" />
-                                    </Frame>
-
-                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                        <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18" TextColor="Black"/>
-                                        <Label Text="{Binding Author}" TextColor="#606060" FontSize="14"/>
-
-                                        <Label Text="{Binding DisplayPage, StringFormat='Page {0}'}" 
-                               FontSize="10" TextColor="Black" Margin="0,5"/>
-
-                                        <ProgressBar Progress="{Binding Progress}" ProgressColor="Green" ScaleY="1.5"/>
+                            <Frame CornerRadius="18"
+                                   HasShadow="False"
+                                   BorderColor="#CBD5E1"
+                                   Margin="0,8"
+                                   Padding="14"
+                                   BackgroundColor="#F8FAFC">
+                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
+                                        <Label Text="{Binding BookCount, StringFormat='{0} livres'}" FontSize="12" TextColor="#64748B" />
                                     </VerticalStackLayout>
+                                    <Button Grid.Column="1"
+                                            Text="Associer un livre"
+                                            BindingContext="{Binding .}"
+                                            Clicked="OnOpenTagPickerClicked"
+                                            BackgroundColor="#10B981"
+                                            TextColor="White"
+                                            CornerRadius="12"
+                                            Padding="14,10" />
                                 </Grid>
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
+            </Frame>
 
-            </VerticalStackLayout>
-        </ScrollView>
+            <Grid IsVisible="{Binding IsTagPickerVisible}"
+                  BackgroundColor="#80000000"
+                  ZIndex="10">
+                <Frame WidthRequest="320"
+                       Padding="16"
+                       CornerRadius="22"
+                       BorderColor="#CBD5E1"
+                       BackgroundColor="White"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center"
+                       HasShadow="True">
+                    <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="12">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Text="{Binding TagPickerTitle}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
+                            <Button Grid.Column="1"
+                                    Text="X"
+                                    Clicked="OnCloseTagPickerClicked"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#0F172A"
+                                    Padding="8,0" />
+                        </Grid>
+                        <Frame Grid.Row="1" CornerRadius="18" Padding="10" HasShadow="False" BorderColor="#D1D5DB" BackgroundColor="White">
+                            <Entry Text="{Binding TagPickerSearchText, Mode=TwoWay}"
+                                   Placeholder="Chercher un livre"
+                                   PlaceholderColor="#94A3B8"
+                                   TextColor="Black"
+                                   BackgroundColor="Transparent" />
+                        </Frame>
+                        <CollectionView Grid.Row="2" ItemsSource="{Binding TagPickerBooks}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*, Auto" Padding="4,6">
+                                        <VerticalStackLayout Spacing="0">
+                                            <Label Text="{Binding Title}" FontSize="14" TextColor="#0F172A" />
+                                            <Label Text="{Binding Author}" FontSize="11" TextColor="#64748B" />
+                                        </VerticalStackLayout>
+                                        <CheckBox Grid.Column="1" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalOptions="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                        <Button Grid.Row="3"
+                                Text="Associer"
+                                Clicked="OnConfirmTagPickerClicked"
+                                BackgroundColor="#0F172A"
+                                TextColor="White"
+                                CornerRadius="12"
+                                Padding="16,10" />
+                    </Grid>
+                </Frame>
+            </Grid>
+        </Grid>
 
         <VerticalStackLayout Grid.Row="1" BackgroundColor="#0F172A" Padding="15">
             <Label Text="OnlyBooks" TextColor="White" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
-            <Label Text="©2026 - toutes les droits reservées" TextColor="#94A3B8" FontSize="11" HorizontalOptions="Center" Margin="0,5,0,0"/>
+            <Label Text="©2026 - toutes les droits reservées" TextColor="#94A3B8" FontSize="11" HorizontalOptions="Center" Margin="0,5,0,0" />
         </VerticalStackLayout>
     </Grid>
 

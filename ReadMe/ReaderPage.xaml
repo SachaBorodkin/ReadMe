@@ -5,63 +5,94 @@
              Title="Reader"
              BackgroundColor="White">
 
-    <Grid RowDefinitions="Auto, *, Auto" Padding="20">
+       <Shell.TitleView>
+              <Grid HorizontalOptions="FillAndExpand" BackgroundColor="#0F172A" Padding="12,8" ColumnDefinitions="Auto, *, Auto">
+                     <Button Grid.Column="0"
+                                   Text="≡"
+                                   Clicked="OnMenuClicked"
+                                   BackgroundColor="Transparent"
+                                   TextColor="White"
+                                   FontSize="22"
+                                   WidthRequest="42"
+                                   HeightRequest="42"
+                                   Padding="0" />
 
-        <!-- Header with book info -->
-        <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,0,0,20">
-            <Label Text="{Binding CurrentBook.Title}" 
-                   FontSize="24" 
-                   FontAttributes="Bold" 
-                   TextColor="Black"/>
-            <Label Text="{Binding CurrentBook.Author}" 
-                   FontSize="14" 
-                   TextColor="#606060"/>
-            <Label Text="{Binding CurrentChapterTitle}" 
-                   FontSize="16" 
-                   FontAttributes="Bold" 
-                   TextColor="#0F172A"/>
+                     <Label Grid.Column="1"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontSize="22"
+                               FontAttributes="Bold">
+                            <Label.FormattedText>
+                                   <FormattedString>
+                                          <Span Text="Only" TextColor="White" />
+                                          <Span Text="Books" TextColor="#14B8A6" />
+                                   </FormattedString>
+                            </Label.FormattedText>
+                     </Label>
+
+                     <BoxView Grid.Column="2" WidthRequest="42" HeightRequest="1" Opacity="0" />
+              </Grid>
+       </Shell.TitleView>
+
+    <Grid RowDefinitions="Auto, *, Auto" Padding="16" RowSpacing="12">
+        <VerticalStackLayout Grid.Row="0" Spacing="6" HorizontalOptions="Center">
+            <Label Text="{Binding CurrentPageDisplay}"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="#0F172A"
+                   HorizontalTextAlignment="Center" />
+            <Label Text="{Binding CurrentChapterTitle}"
+                   FontSize="13"
+                   TextColor="#64748B"
+                   HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
 
-        <!-- Content WebView -->
-        <WebView Grid.Row="1" 
-                 x:Name="ContentWebView"
-                 BackgroundColor="White" />
+        <Frame Grid.Row="1"
+               CornerRadius="22"
+               Padding="0"
+               HasShadow="False"
+               BorderColor="#E2E8F0"
+               BackgroundColor="White">
+            <WebView x:Name="ContentWebView"
+                     BackgroundColor="White" />
+        </Frame>
 
-        <!-- Navigation and Progress -->
-        <Grid Grid.Row="2" ColumnDefinitions="*, Auto, *" ColumnSpacing="10" Margin="0,20,0,0">
-            
-            <!-- Previous Button -->
-            <Button Grid.Column="0" 
-                    Text="← Previous"
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+            <Button Grid.Column="0"
+                    Text="←"
                     Clicked="OnPreviousClicked"
                     BackgroundColor="#0F172A"
                     TextColor="White"
-                    CornerRadius="8"
-                    Padding="15"/>
+                    CornerRadius="14"
+                    WidthRequest="72"
+                    HeightRequest="46" />
 
-            <!-- Progress Info -->
-            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" HorizontalOptions="Center">
-                <Label Text="{Binding CurrentChapterIndex, StringFormat='Chapter {0:D}'}" 
-                       FontSize="12" 
-                       TextColor="Black"
-                       HorizontalTextAlignment="Center"/>
-                <Label Text="{Binding TotalChapters, StringFormat='/ {0}'}" 
-                       FontSize="12" 
-                       TextColor="#606060"
-                       HorizontalTextAlignment="Center"/>
-            </VerticalStackLayout>
+            <Frame Grid.Column="1"
+                   CornerRadius="14"
+                   Padding="0"
+                   HasShadow="False"
+                   BorderColor="#CBD5E1"
+                   BackgroundColor="White"
+                   HorizontalOptions="Center"
+                   WidthRequest="72">
+                <Label Text="{Binding CurrentPageNumber}"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="#0F172A"
+                       Padding="0,10" />
+            </Frame>
 
-            <!-- Next Button -->
-            <Button Grid.Column="2" 
-                    Text="Next →"
+            <Button Grid.Column="2"
+                    Text="→"
                     Clicked="OnNextClicked"
                     BackgroundColor="#0F172A"
                     TextColor="White"
-                    CornerRadius="8"
-                    Padding="15"/>
-
+                    CornerRadius="14"
+                    WidthRequest="72"
+                    HeightRequest="46" />
         </Grid>
-
     </Grid>
 
 </ContentPage>

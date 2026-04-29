@@ -24,6 +24,9 @@ namespace ReadMe.ViewModels
                 {
                     _currentBook = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalPages));
+                    OnPropertyChanged(nameof(CurrentPageNumber));
+                    OnPropertyChanged(nameof(CurrentPageDisplay));
                 }
             }
         }
@@ -63,11 +66,19 @@ namespace ReadMe.ViewModels
                 {
                     _currentChapterIndex = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(CurrentPageNumber));
+                    OnPropertyChanged(nameof(CurrentPageDisplay));
                 }
             }
         }
 
         public int TotalChapters => _epubContent?.Chapters.Count ?? 0;
+
+        public int CurrentPageNumber => CurrentChapterIndex + 1;
+
+        public int TotalPages => CurrentBook?.TotalPages > 0 ? CurrentBook.TotalPages : Math.Max(TotalChapters, 1);
+
+        public string CurrentPageDisplay => $"Page {CurrentPageNumber} sur {TotalPages}";
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -133,6 +144,10 @@ namespace ReadMe.ViewModels
                 CurrentChapterIndex = desiredIndex;
                 LoadChapter(CurrentChapterIndex);
 
+                OnPropertyChanged(nameof(CurrentPageNumber));
+                OnPropertyChanged(nameof(CurrentPageDisplay));
+                OnPropertyChanged(nameof(TotalPages));
+
                 System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Book loaded successfully with {TotalChapters} chapters");
             }
             catch (Exception ex)
@@ -153,8 +168,9 @@ namespace ReadMe.ViewModels
                 var chapter = _epubContent.Chapters[chapterIndex];
                 CurrentChapterTitle = chapter.Title;
                 CurrentChapterContent = chapter.HtmlContent;
-                // Save progress asynchronously when changing chapters
                 _ = SaveProgressAsync();
+                OnPropertyChanged(nameof(CurrentPageNumber));
+                OnPropertyChanged(nameof(CurrentPageDisplay));
                 System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Loaded chapter {chapterIndex + 1}: {chapter.Title}");
             }
             catch (Exception ex)
@@ -175,6 +191,7 @@ namespace ReadMe.ViewModels
 
                 await _dbService.SaveBookAsync(CurrentBook);
                 System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Progress saved: Chapter {CurrentChapterIndex + 1}");
+                OnPropertyChanged(nameof(CurrentPageDisplay));
             }
             catch (Exception ex)
             {

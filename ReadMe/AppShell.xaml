@@ -16,7 +16,4 @@
     <FlyoutItem Title="Home" Icon="home_icon.png">
         <ShellContent ContentTemplate="{DataTemplate local:MainPage}" />
     </FlyoutItem>
-    <FlyoutItem Title="Reader" Icon="icon_about.png">
-        <ShellContent Title="Reader" Icon="icon_about.png" Route="reader" ContentTemplate="{DataTemplate local:ReaderPage}" />
-    </FlyoutItem>
 </Shell>
