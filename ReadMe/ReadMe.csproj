@@ -57,6 +57,9 @@
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		
+		<!-- Books -->
+		<MauiAsset Include="books\**" LogicalName="books/%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>

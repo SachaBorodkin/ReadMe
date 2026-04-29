@@ -12,13 +12,11 @@ namespace ReadMe.Services
             if (_database is not null)
                 return;
 
-            // Define where the database file will live on the phone
             var dbPath = Path.Combine(FileSystem.AppDataDirectory, "api.db");
             System.Diagnostics.Debug.WriteLine($"[DatabaseService] Initializing database at: {dbPath}");
 
             _database = new SQLiteAsyncConnection(dbPath);
 
-            // Create the table if it doesn't exist
             await _database.CreateTableAsync<Book>();
             System.Diagnostics.Debug.WriteLine("[DatabaseService] Database initialized and table created");
         }
@@ -39,7 +37,7 @@ namespace ReadMe.Services
             System.Diagnostics.Debug.WriteLine($"[DatabaseService] Saving book: {book.Title} with ID: {book.Id}");
             try
             {
-                // Always insert since we're getting data from API with existing IDs
+
                 var result = await _database.InsertAsync(book);
                 System.Diagnostics.Debug.WriteLine($"[DatabaseService] Insert result: {result}");
                 return result;

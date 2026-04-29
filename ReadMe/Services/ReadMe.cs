@@ -7,20 +7,20 @@ namespace ReadMe.Services
     public class BookApiService
     {
         private readonly HttpClient _httpClient;
-        
+
         private readonly string ApiUrl = GetApiUrl();
 
         private static string GetApiUrl()
         {
 #if DEBUG
             if (DeviceInfo.Platform == DevicePlatform.Android)
-                return "http://10.0.2.2:3000/books";
+                return "http:
             else if (DeviceInfo.Platform == DevicePlatform.iOS)
-                return "http://localhost:3000/books";
+                return "http:
             else
-                return "http://127.0.0.1:3000/books";
+                return "http:
 #else
-            return "http://127.0.0.1:3000/books";
+            return "http:
 #endif
         }
 
@@ -28,7 +28,7 @@ namespace ReadMe.Services
         {
             var handler = new HttpClientHandler();
 #if DEBUG
-            // Allow cleartext traffic for development
+
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
 #endif
             _httpClient = new HttpClient(handler);
@@ -41,10 +41,10 @@ namespace ReadMe.Services
             {
                 System.Diagnostics.Debug.WriteLine($"[BookApiService] API URL: {ApiUrl}");
                 System.Diagnostics.Debug.WriteLine($"[BookApiService] Platform: {DeviceInfo.Platform}");
-                
+
                 var response = await _httpClient.GetAsync(ApiUrl);
                 System.Diagnostics.Debug.WriteLine($"[BookApiService] Response Status: {response.StatusCode}");
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     System.Diagnostics.Debug.WriteLine($"[BookApiService] API Error: {response.StatusCode} - {response.ReasonPhrase}");
@@ -59,7 +59,7 @@ namespace ReadMe.Services
                     content, 
                     new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                 );
-                
+
                 System.Diagnostics.Debug.WriteLine($"[BookApiService] Successfully deserialized {books?.Count ?? 0} books");
                 return books ?? new List<Book>();
             }

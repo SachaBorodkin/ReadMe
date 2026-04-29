@@ -9,7 +9,8 @@ namespace ReadMe
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
-            builder
+
+            var app = builder
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
                 {
@@ -17,18 +18,19 @@ namespace ReadMe
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            // Register services
             builder.Services.AddSingleton<DatabaseService>();
-            builder.Services.AddSingleton<BookApiService>();
+            builder.Services.AddSingleton<LocalBooksService>();
+            builder.Services.AddSingleton<EpubReaderService>();
             builder.Services.AddSingleton<MainViewModel>();
+            builder.Services.AddSingleton<ReaderViewModel>();
             builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddSingleton<ReaderPage>();
 
-#if DEBUG
-
-            builder.Logging.AddDebug();
-#endif
-
-            return builder.Build();
+            var mauiApp = app.Build();
+            Current = mauiApp;
+            return mauiApp;
         }
+
+        public static MauiApp Current { get; private set; }
     }
 }

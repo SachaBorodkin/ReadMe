@@ -9,7 +9,7 @@ namespace ReadMe.ViewModels
     public class MainViewModel : INotifyPropertyChanged
     {
         private readonly DatabaseService _dbService;
-        private readonly BookApiService _apiService;
+        private readonly LocalBooksService _localBooksService;
         private bool _isLoading;
 
         public ObservableCollection<Book> Books { get; set; } = new();
@@ -29,10 +29,10 @@ namespace ReadMe.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public MainViewModel(DatabaseService dbService, BookApiService apiService)
+        public MainViewModel(DatabaseService dbService, LocalBooksService localBooksService)
         {
             _dbService = dbService;
-            _apiService = apiService;
+            _localBooksService = localBooksService;
             _ = LoadBooksAsync();
         }
 
@@ -43,33 +43,29 @@ namespace ReadMe.ViewModels
                 IsLoading = true;
                 System.Diagnostics.Debug.WriteLine("[MainViewModel] === Starting LoadBooksAsync ===");
 
-                // 1. Fetch books from API
-                System.Diagnostics.Debug.WriteLine("[MainViewModel] Calling API...");
-                var apiBooks = await _apiService.FetchBooksFromApiAsync();
-                System.Diagnostics.Debug.WriteLine($"[MainViewModel] API returned {apiBooks?.Count ?? 0} books");
+                System.Diagnostics.Debug.WriteLine("[MainViewModel] Loading local books...");
+                var localBooks = await _localBooksService.LoadLocalBooksAsync();
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Local books returned {localBooks?.Count ?? 0} books");
 
-                if (apiBooks != null && apiBooks.Count > 0)
+                if (localBooks != null && localBooks.Count > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"First book: Title={apiBooks[0].Title}, Author={apiBooks[0].Author}");
-                    
-                    // 2. Clear existing database
+                    System.Diagnostics.Debug.WriteLine($"First book: Title={localBooks[0].Title}, Author={localBooks[0].Author}");
+
                     await _dbService.DeleteAllBooksAsync();
                     System.Diagnostics.Debug.WriteLine("Cleared database");
 
-                    // 3. Save API data to local DB
-                    foreach (var book in apiBooks)
+                    foreach (var book in localBooks)
                     {
                         var result = await _dbService.SaveBookAsync(book);
                         System.Diagnostics.Debug.WriteLine($"Saved book '{book.Title}' with result: {result}");
                     }
-                    System.Diagnostics.Debug.WriteLine($"Saved {apiBooks.Count} books to database");
+                    System.Diagnostics.Debug.WriteLine($"Saved {localBooks.Count} books to database");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("No books received from API");
+                    System.Diagnostics.Debug.WriteLine("No local books found");
                 }
 
-                // 4. Load from DB into UI
                 var items = await _dbService.GetBooksAsync();
                 System.Diagnostics.Debug.WriteLine($"Loaded {items?.Count ?? 0} books from database");
 

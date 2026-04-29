@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReadMe.ReaderPage"
+             Title="Reader"
+             BackgroundColor="White">
+
+    <Grid RowDefinitions="Auto, *, Auto" Padding="20">
+
+        <!-- Header with book info -->
+        <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,0,0,20">
+            <Label Text="{Binding CurrentBook.Title}" 
+                   FontSize="24" 
+                   FontAttributes="Bold" 
+                   TextColor="Black"/>
+            <Label Text="{Binding CurrentBook.Author}" 
+                   FontSize="14" 
+                   TextColor="#606060"/>
+            <Label Text="{Binding CurrentChapterTitle}" 
+                   FontSize="16" 
+                   FontAttributes="Bold" 
+                   TextColor="#0F172A"/>
+        </VerticalStackLayout>
+
+        <!-- Content WebView -->
+        <WebView Grid.Row="1" 
+                 x:Name="ContentWebView"
+                 BackgroundColor="White" />
+
+        <!-- Navigation and Progress -->
+        <Grid Grid.Row="2" ColumnDefinitions="*, Auto, *" ColumnSpacing="10" Margin="0,20,0,0">
+            
+            <!-- Previous Button -->
+            <Button Grid.Column="0" 
+                    Text="← Previous"
+                    Clicked="OnPreviousClicked"
+                    BackgroundColor="#0F172A"
+                    TextColor="White"
+                    CornerRadius="8"
+                    Padding="15"/>
+
+            <!-- Progress Info -->
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" HorizontalOptions="Center">
+                <Label Text="{Binding CurrentChapterIndex, StringFormat='Chapter {0:D}'}" 
+                       FontSize="12" 
+                       TextColor="Black"
+                       HorizontalTextAlignment="Center"/>
+                <Label Text="{Binding TotalChapters, StringFormat='/ {0}'}" 
+                       FontSize="12" 
+                       TextColor="#606060"
+                       HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Next Button -->
+            <Button Grid.Column="2" 
+                    Text="Next →"
+                    Clicked="OnNextClicked"
+                    BackgroundColor="#0F172A"
+                    TextColor="White"
+                    CornerRadius="8"
+                    Padding="15"/>
+
+        </Grid>
+
+    </Grid>
+
+</ContentPage>
