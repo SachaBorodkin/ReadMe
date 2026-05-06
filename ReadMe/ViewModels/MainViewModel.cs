@@ -342,11 +342,12 @@ namespace ReadMe.ViewModels
 
                 if (result != null)
                 {
-                    NewBookEpubPath = result.FullPath;
-                    if (string.IsNullOrEmpty(NewBookTitle))
+                    // Fix: Check the actual bound property value, as an empty entry sometimes returns whitespace
+                    if (string.IsNullOrWhiteSpace(NewBookTitle))
                     {
                         NewBookTitle = Path.GetFileNameWithoutExtension(result.FileName);
                     }
+                    NewBookEpubPath = result.FullPath;
                 }
             }
             catch (Exception ex)
@@ -365,7 +366,10 @@ namespace ReadMe.ViewModels
                 IsLoading = true;
                 IsAddBookVisible = false;
 
-                var newBook = await _localBooksService.AddUserBookAsync(NewBookEpubPath, NewBookAuthor, NewBookTitle);
+                var finalTitle = NewBookTitle?.Trim() ?? "Titre Inconnu";
+                var finalAuthor = NewBookAuthor?.Trim() ?? "Auteur Inconnu";
+
+                var newBook = await _localBooksService.AddUserBookAsync(NewBookEpubPath, finalAuthor, finalTitle);
                 if (newBook != null)
                 {
                     await _dbService.SaveBookAsync(newBook);
@@ -408,7 +412,7 @@ namespace ReadMe.ViewModels
             if (SelectedTag == null)
                 return;
 
-            var selectedIds = TagPickerBooks.Where(item => item.IsSelected).Select(item => item.Book.Id).ToHashSet();
+            var selectedIds = _tagPickerSourceBooks.Where(item => item.IsSelected).Select(item => item.Book.Id).ToHashSet();
             _tagAssignments[SelectedTag.Name] = selectedIds;
 
             ApplyTagCounts();
@@ -541,17 +545,12 @@ namespace ReadMe.ViewModels
                     (item.Author?.Contains(TagPickerSearchText, StringComparison.OrdinalIgnoreCase) ?? false));
             }
 
-            var selectedIds = SelectedTag == null ? new HashSet<int>() : GetTagAssignments(SelectedTag.Name);
-
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 TagPickerBooks.Clear();
                 foreach (var item in query)
                 {
-                    TagPickerBooks.Add(new BookSelectionItem(item.Book)
-                    {
-                        IsSelected = selectedIds.Contains(item.Book.Id)
-                    });
+                    TagPickerBooks.Add(item);
                 }
             });
         }
