@@ -203,5 +203,53 @@ namespace ReadMe.Services
         {
             return _cachedBooks ?? new List<Book>();
         }
+
+        public async Task<Book> AddUserBookAsync(string sourceEpubPath, string author, string title)
+        {
+            try
+            {
+                if (!Directory.Exists(_booksDirectory))
+                {
+                    Directory.CreateDirectory(_booksDirectory);
+                }
+
+                string fileName = Path.GetFileName(sourceEpubPath);
+                string destinationFolderFile = Path.Combine(_booksDirectory, fileName);
+                
+                // Keep unique name if exists
+                if (File.Exists(destinationFolderFile))
+                {
+                    fileName = $"{Guid.NewGuid()}_{fileName}";
+                    destinationFolderFile = Path.Combine(_booksDirectory, fileName);
+                }
+
+                File.Copy(sourceEpubPath, destinationFolderFile);
+
+                int nextId = _cachedBooks.Any() ? _cachedBooks.Max(b => b.Id) + 1 : 1;
+
+                var book = new Book
+                {
+                    Id = nextId,
+                    Title = title,
+                    Author = author,
+                    EpubFilePath = destinationFolderFile,
+                    TotalPages = await GetEpubPageCountAsync(destinationFolderFile),
+                    CoverImage = "book_icon.png", 
+                    Description = $"A book by {author}",
+                    Language = "en",
+                    UploadedAt = DateTime.Now.ToString("yyyy-MM-dd"),
+                    LastPageOpened = 0,
+                    LastOpenedDate = DateTime.MinValue
+                };
+
+                _cachedBooks.Add(book);
+                return book;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LocalBooksService] Error adding user book: {ex.Message}");
+                return null;
+            }
+        }
     }
 }

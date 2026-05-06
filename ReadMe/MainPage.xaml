@@ -11,7 +11,7 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Shell.TitleView>
+    <NavigationPage.TitleView>
         <Grid HorizontalOptions="FillAndExpand" BackgroundColor="#0F172A" Padding="12,8" ColumnDefinitions="Auto, *, Auto">
             <Button Grid.Column="0"
                     Text="≡"
@@ -36,9 +36,17 @@
                 </Label.FormattedText>
             </Label>
 
-            <BoxView Grid.Column="2" WidthRequest="42" HeightRequest="1" Opacity="0" />
+            <Button Grid.Column="2" 
+                    Text="+" 
+                    TextColor="White" 
+                    FontSize="24" 
+                    BackgroundColor="Transparent" 
+                    Clicked="OnAddBookOpenClicked" 
+                    WidthRequest="42" 
+                    HeightRequest="42" 
+                    Padding="0" />
         </Grid>
-    </Shell.TitleView>
+    </NavigationPage.TitleView>
 
     <Grid RowDefinitions="*, Auto">
         <Grid Grid.Row="0" Padding="16" RowDefinitions="Auto, Auto, Auto, *" RowSpacing="12">
@@ -242,6 +250,51 @@
                                 CornerRadius="12"
                                 Padding="16,10" />
                     </Grid>
+                </Frame>
+            </Grid>
+
+            <Grid IsVisible="{Binding IsAddBookVisible}"
+                  BackgroundColor="#80000000"
+                  ZIndex="11">
+                <Frame WidthRequest="320"
+                       Padding="16"
+                       CornerRadius="22"
+                       BorderColor="#CBD5E1"
+                       BackgroundColor="White"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center"
+                       HasShadow="True">
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Text="Ajouter un livre" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
+                            <Button Grid.Column="1"
+                                    Text="X"
+                                    Clicked="OnAddBookCloseClicked"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#0F172A"
+                                    Padding="8,0" />
+                        </Grid>
+
+                        <Button Text="Sélectionner un fichier EPUB"
+                                Clicked="OnAddBookPickEpubClicked"
+                                BackgroundColor="#E2E8F0"
+                                TextColor="#0F172A"
+                                CornerRadius="12"
+                                Padding="12,10" />
+                        <Label Text="{Binding NewBookEpubFileName}" FontSize="12" TextColor="#64748B" HorizontalOptions="Center" />
+
+                        <Entry Text="{Binding NewBookTitle, Mode=TwoWay}" Placeholder="Titre du livre" TextColor="Black" />
+                        <Entry Text="{Binding NewBookAuthor, Mode=TwoWay}" Placeholder="Auteur" TextColor="Black" />
+                        <Entry Text="{Binding NewBookTag, Mode=TwoWay}" Placeholder="Tag optionnel" TextColor="Black" />
+
+                        <Button Text="Ajouter"
+                                Clicked="OnAddBookConfirmClicked"
+                                BackgroundColor="#0F172A"
+                                TextColor="White"
+                                CornerRadius="12"
+                                Padding="16,10"
+                                Margin="0,10,0,0"/>
+                    </VerticalStackLayout>
                 </Frame>
             </Grid>
         </Grid>

@@ -148,6 +148,46 @@ namespace ReadMe.ViewModels
             }
         }
 
+        // --- Add Book Properties ---
+        private bool _isAddBookVisible;
+        private string _newBookTitle;
+        private string _newBookAuthor;
+        private string _newBookEpubPath;
+        private string _newBookTag;
+
+        public bool IsAddBookVisible
+        {
+            get => _isAddBookVisible;
+            set { if (_isAddBookVisible != value) { _isAddBookVisible = value; OnPropertyChanged(); } }
+        }
+
+        public string NewBookTitle
+        {
+            get => _newBookTitle;
+            set { if (_newBookTitle != value) { _newBookTitle = value; OnPropertyChanged(); } }
+        }
+
+        public string NewBookAuthor
+        {
+            get => _newBookAuthor;
+            set { if (_newBookAuthor != value) { _newBookAuthor = value; OnPropertyChanged(); } }
+        }
+
+        public string NewBookEpubPath
+        {
+            get => _newBookEpubPath;
+            set { if (_newBookEpubPath != value) { _newBookEpubPath = value; OnPropertyChanged(); OnPropertyChanged(nameof(NewBookEpubFileName)); } }
+        }
+
+        public string NewBookEpubFileName => string.IsNullOrEmpty(_newBookEpubPath) ? "Aucun fichier sélectionné" : Path.GetFileName(_newBookEpubPath);
+
+        public string NewBookTag
+        {
+            get => _newBookTag;
+            set { if (_newBookTag != value) { _newBookTag = value; OnPropertyChanged(); } }
+        }
+        // --- Add Book Properties End ---
+
         public string TagPickerSearchText
         {
             get => _tagPickerSearchText;
@@ -267,6 +307,101 @@ namespace ReadMe.ViewModels
             SelectedTag = null;
             TagPickerBooks.Clear();
         }
+
+        // --- Add Book Methods ---
+        public void OpenAddBook()
+        {
+            NewBookTitle = string.Empty;
+            NewBookAuthor = string.Empty;
+            NewBookEpubPath = string.Empty;
+            NewBookTag = string.Empty;
+            IsAddBookVisible = true;
+        }
+
+        public void CloseAddBook()
+        {
+            IsAddBookVisible = false;
+        }
+
+        public async Task PickEpubAsync()
+        {
+            try
+            {
+                var customFileType = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.iOS, new[] { "org.idpf.epub-container" } },
+                    { DevicePlatform.Android, new[] { "application/epub+zip" } },
+                    { DevicePlatform.WinUI, new[] { ".epub" } },
+                    { DevicePlatform.MacCatalyst, new[] { "org.idpf.epub-container" } }
+                });
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Sélectionner un fichier EPUB",
+                    FileTypes = customFileType
+                });
+
+                if (result != null)
+                {
+                    NewBookEpubPath = result.FullPath;
+                    if (string.IsNullOrEmpty(NewBookTitle))
+                    {
+                        NewBookTitle = Path.GetFileNameWithoutExtension(result.FileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Error picking file: {ex.Message}");
+            }
+        }
+
+        public async Task ConfirmAddBookAsync()
+        {
+            if (string.IsNullOrWhiteSpace(NewBookTitle) || string.IsNullOrWhiteSpace(NewBookAuthor) || string.IsNullOrWhiteSpace(NewBookEpubPath))
+                return;
+
+            try
+            {
+                IsLoading = true;
+                IsAddBookVisible = false;
+
+                var newBook = await _localBooksService.AddUserBookAsync(NewBookEpubPath, NewBookAuthor, NewBookTitle);
+                if (newBook != null)
+                {
+                    await _dbService.SaveBookAsync(newBook);
+                    _allBooks.Add(newBook);
+
+                    if (!string.IsNullOrWhiteSpace(NewBookTag))
+                    {
+                        var tagToFind = NewBookTag.Trim();
+                        var existingTag = _allTags.FirstOrDefault(t => t.Name.Equals(tagToFind, StringComparison.OrdinalIgnoreCase));
+                        if (existingTag == null)
+                        {
+                            existingTag = new TagItem(tagToFind);
+                            _allTags.Add(existingTag);
+                        }
+                        
+                        if (!_tagAssignments.ContainsKey(existingTag.Name))
+                        {
+                            _tagAssignments[existingTag.Name] = new HashSet<int>();
+                        }
+                        _tagAssignments[existingTag.Name].Add(newBook.Id);
+                    }
+
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        ApplyTagCounts();
+                        RefreshTagFilterOptions();
+                        RefreshVisibleCollections();
+                    });
+                }
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        // --- Add Book Methods End ---
 
         public void ConfirmTagPickerSelection()
         {

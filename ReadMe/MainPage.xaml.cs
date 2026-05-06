@@ -79,6 +79,38 @@ namespace ReadMe
             }
         }
 
+        private void OnAddBookOpenClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                vm.OpenAddBook();
+            }
+        }
+
+        private void OnAddBookCloseClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                vm.CloseAddBook();
+            }
+        }
+
+        private async void OnAddBookPickEpubClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                await vm.PickEpubAsync();
+            }
+        }
+
+        private async void OnAddBookConfirmClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                await vm.ConfirmAddBookAsync();
+            }
+        }
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();
