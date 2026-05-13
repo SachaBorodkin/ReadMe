@@ -77,5 +77,22 @@ namespace ReadMe.Services
             System.Diagnostics.Debug.WriteLine($"[DatabaseService] Deleted {count} books from database");
             return count;
         }
+
+        public async Task<int> DeleteBookAsync(int bookId)
+        {
+            await Init();
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Deleting book with ID: {bookId}");
+            try
+            {
+                var result = await _database.DeleteAsync<Book>(bookId);
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Delete result: {result}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Error deleting book: {ex.Message}");
+                return 0;
+            }
+        }
     }
 }

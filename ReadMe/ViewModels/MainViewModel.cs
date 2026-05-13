@@ -236,6 +236,8 @@ namespace ReadMe.ViewModels
                             book.Id = existing.Id;
                             book.LastPageOpened = existing.LastPageOpened;
                             book.LastOpenedDate = existing.LastOpenedDate;
+                            book.Title = existing.Title;
+                            book.Author = existing.Author;
                         }
 
                         await _dbService.SaveBookAsync(book);
@@ -582,6 +584,50 @@ namespace ReadMe.ViewModels
             }
 
             return new HashSet<int>();
+        }
+
+        public async Task DeleteBookAsync(Book book)
+        {
+            if (book == null)
+                return;
+
+            try
+            {
+                IsLoading = true;
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Deleting book: {book.Title}");
+
+                // Delete from local file system
+                await _localBooksService.DeleteBookAsync(book);
+
+                // Delete from database
+                await _dbService.DeleteBookAsync(book.Id);
+
+                // Remove from all collections
+                _allBooks.Remove(book);
+
+                // Remove from tag assignments
+                foreach (var tagName in _tagAssignments.Keys)
+                {
+                    _tagAssignments[tagName].Remove(book.Id);
+                }
+
+                // Refresh UI
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    ApplyTagCounts();
+                    RefreshTagFilterOptions();
+                    RefreshVisibleCollections();
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Book deleted successfully: {book.Title}");
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Error deleting book: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)

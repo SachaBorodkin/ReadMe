@@ -1,5 +1,6 @@
 ﻿using ReadMe.Models;
 using ReadMe.ViewModels;
+using ReadMe.Models;
 namespace ReadMe
 {
     public partial class MainPage : ContentPage
@@ -108,6 +109,22 @@ namespace ReadMe
             if (BindingContext is MainViewModel vm)
             {
                 await vm.ConfirmAddBookAsync();
+            }
+        }
+
+        private async void OnDeleteBookClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is Book book && BindingContext is MainViewModel vm)
+            {
+                bool confirm = await DisplayAlert("Confirmer la suppression", 
+                    $"Êtes-vous sûr de vouloir supprimer \"{book.Title}\" ?", 
+                    "Oui", 
+                    "Non");
+
+                if (confirm)
+                {
+                    await vm.DeleteBookAsync(book);
+                }
             }
         }
 

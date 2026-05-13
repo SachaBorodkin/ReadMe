@@ -156,6 +156,13 @@ namespace ReadMe.Services
 
         private (string Author, string Title) ParseFilename(string filename)
         {
+            // Handle GUID-prefixed filenames (e.g., "guid_author - title.epub")
+            if (filename.Contains("_") && Guid.TryParse(filename.Split('_')[0], out _))
+            {
+                // Remove GUID prefix
+                var guidPrefixLength = filename.Split('_')[0].Length + 1; // +1 for the underscore
+                filename = filename.Substring(guidPrefixLength);
+            }
 
             var parts = filename.Split(new[] { " - " }, StringSplitOptions.None);
 
@@ -249,6 +256,33 @@ namespace ReadMe.Services
             {
                 System.Diagnostics.Debug.WriteLine($"[LocalBooksService] Error adding user book: {ex.Message}");
                 return null;
+            }
+        }
+
+        public async Task<bool> DeleteBookAsync(Book book)
+        {
+            try
+            {
+                if (book == null || string.IsNullOrEmpty(book.EpubFilePath))
+                {
+                    System.Diagnostics.Debug.WriteLine("[LocalBooksService] Cannot delete book: book or EpubFilePath is null");
+                    return false;
+                }
+
+                if (File.Exists(book.EpubFilePath))
+                {
+                    File.Delete(book.EpubFilePath);
+                    System.Diagnostics.Debug.WriteLine($"[LocalBooksService] Deleted EPUB file: {book.EpubFilePath}");
+                }
+
+                _cachedBooks.RemoveAll(b => b.Id == book.Id);
+                System.Diagnostics.Debug.WriteLine($"[LocalBooksService] Removed book from cache: {book.Title}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LocalBooksService] Error deleting book: {ex.Message}");
+                return false;
             }
         }
     }

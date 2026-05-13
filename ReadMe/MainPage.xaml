@@ -136,7 +136,7 @@
                                     <Frame.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnBookTapped" CommandParameter="{Binding .}" />
                                     </Frame.GestureRecognizers>
-                                    <Grid ColumnDefinitions="72, *" ColumnSpacing="14">
+                                    <Grid ColumnDefinitions="72, *, Auto" ColumnSpacing="14">
                                         <Frame Grid.Column="0" Padding="0" CornerRadius="10" HeightRequest="96" WidthRequest="72" HasShadow="False" BorderColor="#E2E8F0" BackgroundColor="#0F172A">
                                             <Label Text="EPUB"
                                                    HorizontalOptions="Center"
@@ -151,6 +151,15 @@
                                             <Label Text="{Binding DisplayPage, StringFormat='Page {0}'}" FontSize="12" TextColor="#111827" />
                                             <ProgressBar Progress="{Binding Progress}" ProgressColor="#14B8A6" ScaleY="1.3" />
                                         </VerticalStackLayout>
+                                        <Button Grid.Column="2"
+                                                Text="🗑️"
+                                                BindingContext="{Binding .}"
+                                                Clicked="OnDeleteBookClicked"
+                                                BackgroundColor="Transparent"
+                                                TextColor="#EF4444"
+                                                FontSize="20"
+                                                Padding="8"
+                                                VerticalOptions="Center" />
                                     </Grid>
                                 </Frame>
                             </DataTemplate>
