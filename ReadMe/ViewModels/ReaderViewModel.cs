@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ReadMe.Models;
 using ReadMe.Services;
@@ -95,39 +95,47 @@ namespace ReadMe.ViewModels
                 CurrentBook = book;
                 System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Loading book: {book.Title}");
 
-                var epubFileName = Path.GetFileName(book.EpubFilePath);
-                var epubPath = Path.Combine(FileSystem.AppDataDirectory, "books", epubFileName);
-
-                System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] EPUB path: {epubPath}");
-
-                if (!File.Exists(epubPath))
+                if (book.EpubContent != null && book.EpubContent.Length > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] EPUB file not found, attempting download...");
-
-                    var booksDir = Path.Combine(FileSystem.AppDataDirectory, "books");
-                    if (!Directory.Exists(booksDir))
-                        Directory.CreateDirectory(booksDir);
-
-                    using (var client = new HttpClient())
-                    {
-                        var downloadUrl = $"http://10.0.2.2:3000/files/{epubFileName}";
-                        System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Downloading from: {downloadUrl}");
-
-                        var response = await client.GetAsync(downloadUrl);
-                        if (!response.IsSuccessStatusCode)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Download failed with status: {response.StatusCode}");
-                            await Shell.Current.DisplayAlert("Error", $"Failed to download book file (Status: {response.StatusCode})", "OK");
-                            return;
-                        }
-
-                        var fileContent = await response.Content.ReadAsByteArrayAsync();
-                        await File.WriteAllBytesAsync(epubPath, fileContent);
-                        System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Downloaded {fileContent.Length} bytes");
-                    }
+                    System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Loading EPUB from database blob");
+                    _epubContent = await _epubReaderService.LoadEpubAsync(book.EpubContent);
                 }
+                else
+                {
+                    var epubFileName = Path.GetFileName(book.EpubFilePath);
+                    var epubPath = Path.Combine(FileSystem.AppDataDirectory, "books", epubFileName);
 
-                _epubContent = await _epubReaderService.LoadEpubAsync(epubPath);
+                    System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] EPUB path: {epubPath}");
+
+                    if (!File.Exists(epubPath))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] EPUB file not found, attempting download...");
+
+                        var booksDir = Path.Combine(FileSystem.AppDataDirectory, "books");
+                        if (!Directory.Exists(booksDir))
+                            Directory.CreateDirectory(booksDir);
+
+                        using (var client = new HttpClient())
+                        {
+                            var downloadUrl = $"http://10.0.2.2:3000/files/{epubFileName}";
+                            System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Downloading from: {downloadUrl}");
+
+                            var response = await client.GetAsync(downloadUrl);
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Download failed with status: {response.StatusCode}");
+                                await Shell.Current.DisplayAlert("Error", $"Failed to download book file (Status: {response.StatusCode})", "OK");
+                                return;
+                            }
+
+                            var fileContent = await response.Content.ReadAsByteArrayAsync();
+                            await File.WriteAllBytesAsync(epubPath, fileContent);
+                            System.Diagnostics.Debug.WriteLine($"[ReaderViewModel] Downloaded {fileContent.Length} bytes");
+                        }
+                    }
+
+                    _epubContent = await _epubReaderService.LoadEpubAsync(epubPath);
+                }
 
                 int desiredIndex = 0;
                 if (book != null)

@@ -1,4 +1,4 @@
-﻿using ReadMe.Models;
+using ReadMe.Models;
 using System.IO.Compression;
 using System.Xml.Linq;
 
@@ -142,7 +142,9 @@ namespace ReadMe.Services
                     Language = "en",
                     UploadedAt = DateTime.Now.ToString("yyyy-MM-dd"),
                     LastPageOpened = 0,
-                    LastOpenedDate = DateTime.MinValue
+                    LastOpenedDate = DateTime.MinValue,
+                    InsertionDate = DateTime.Now,
+                    EpubContent = File.Exists(epubFilePath) ? await File.ReadAllBytesAsync(epubFilePath) : null
                 };
 
                 return book;
@@ -246,7 +248,9 @@ namespace ReadMe.Services
                     Language = "en",
                     UploadedAt = DateTime.Now.ToString("yyyy-MM-dd"),
                     LastPageOpened = 0,
-                    LastOpenedDate = DateTime.MinValue
+                    LastOpenedDate = DateTime.MinValue,
+                    InsertionDate = DateTime.Now,
+                    EpubContent = File.Exists(destinationFolderFile) ? await File.ReadAllBytesAsync(destinationFolderFile) : null
                 };
 
                 _cachedBooks.Add(book);

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:ReadMe.Converters"
@@ -102,7 +102,7 @@
                    HasShadow="False"
                    BorderColor="#E5E7EB"
                    BackgroundColor="#F8FAFC">
-                <Grid RowDefinitions="Auto, Auto, *" RowSpacing="12">
+                <Grid RowDefinitions="Auto, Auto, Auto, *" RowSpacing="12">
                     <Grid IsVisible="{Binding IsFiltersVisible}" ColumnDefinitions="*, *" ColumnSpacing="12">
                         <VerticalStackLayout Grid.Column="0" Spacing="6">
                             <Label Text="Date d'ajout" FontSize="12" TextColor="#6B7280" />
@@ -118,7 +118,31 @@
                         </VerticalStackLayout>
                     </Grid>
 
-                    <CollectionView Grid.Row="2" ItemsSource="{Binding Books}" VerticalOptions="FillAndExpand">
+                    <Frame Grid.Row="1" 
+                           IsVisible="{Binding IsViewingTagBooks}"
+                           CornerRadius="12"
+                           Padding="12"
+                           HasShadow="False"
+                           BorderColor="#14B8A6"
+                           BackgroundColor="#D1FAE5">
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <Label Grid.Column="0"
+                                   Text="{Binding SelectedTagForBookFilter.Name, StringFormat='Affichage: {0}'}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#0F172A"
+                                   VerticalOptions="Center" />
+                            <Button Grid.Column="1"
+                                    Text="✕"
+                                    Clicked="OnClearTagFilterClicked"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#0F172A"
+                                    FontSize="16"
+                                    Padding="8,0" />
+                        </Grid>
+                    </Frame>
+
+                    <CollectionView Grid.Row="3" ItemsSource="{Binding Books}" VerticalOptions="FillAndExpand">
                         <CollectionView.EmptyView>
                             <Label Text="Aucun livre"
                                    HorizontalOptions="Center"
@@ -190,6 +214,9 @@
                                    Margin="0,8"
                                    Padding="14"
                                    BackgroundColor="#F8FAFC">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnTagTapped" CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
                                 <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
                                     <VerticalStackLayout Spacing="2">
                                         <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />

@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ReadMe.Models;
@@ -23,6 +23,8 @@ namespace ReadMe.ViewModels
         private bool _isTagPickerVisible;
         private TagItem _selectedTag;
         private string _tagPickerSearchText = string.Empty;
+        private TagItem _selectedTagForBookFilter;
+        private bool _isViewingTagBooks;
 
         public ObservableCollection<Book> Books { get; } = new();
         public ObservableCollection<TagItem> Tags { get; } = new();
@@ -88,7 +90,7 @@ namespace ReadMe.ViewModels
             }
         }
 
-        public string CurrentSectionTitle => IsBooksView ? "Derniers livres" : "Tags";
+        public string CurrentSectionTitle => IsViewingTagBooks ? $"Livres - {_selectedTagForBookFilter?.Name}" : (IsBooksView ? "Derniers livres" : "Tags");
 
         public string SearchPlaceholder => IsBooksView ? "Chercher un livre" : "Chercher un tag";
 
@@ -150,10 +152,10 @@ namespace ReadMe.ViewModels
 
         // --- Add Book Properties ---
         private bool _isAddBookVisible;
-        private string _newBookTitle;
-        private string _newBookAuthor;
-        private string _newBookEpubPath;
-        private string _newBookTag;
+        private string _newBookTitle = string.Empty;
+        private string _newBookAuthor = string.Empty;
+        private string _newBookEpubPath = string.Empty;
+        private string _newBookTag = string.Empty;
 
         public bool IsAddBookVisible
         {
@@ -204,6 +206,35 @@ namespace ReadMe.ViewModels
 
         public string TagPickerTitle => SelectedTag == null ? "Associer un livre" : $"Associer à {SelectedTag.Name}";
 
+        public TagItem SelectedTagForBookFilter
+        {
+            get => _selectedTagForBookFilter;
+            set
+            {
+                if (_selectedTagForBookFilter != value)
+                {
+                    _selectedTagForBookFilter = value;
+                    OnPropertyChanged();
+                    IsViewingTagBooks = value != null;
+                    OnPropertyChanged(nameof(CurrentSectionTitle));
+                }
+            }
+        }
+
+        public bool IsViewingTagBooks
+        {
+            get => _isViewingTagBooks;
+            set
+            {
+                if (_isViewingTagBooks != value)
+                {
+                    _isViewingTagBooks = value;
+                    OnPropertyChanged();
+                    RefreshVisibleBooks();
+                }
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public MainViewModel(DatabaseService dbService, LocalBooksService localBooksService)
@@ -238,6 +269,7 @@ namespace ReadMe.ViewModels
                             book.LastOpenedDate = existing.LastOpenedDate;
                             book.Title = existing.Title;
                             book.Author = existing.Author;
+                            book.InsertionDate = existing.InsertionDate;
                         }
 
                         await _dbService.SaveBookAsync(book);
@@ -246,12 +278,54 @@ namespace ReadMe.ViewModels
 
                 var items = await _dbService.GetBooksAsync();
 
+                var dbTags = await _dbService.GetAllTagsAsync();
+                if (dbTags.Count == 0 && items.Count > 0)
+                {
+                    var initialTags = new[] { "Classiques", "Aventure", "Voyage", "Lecture", "Favoris" };
+                    foreach (var t in initialTags) await _dbService.GetOrCreateTagAsync(t);
+                    dbTags = await _dbService.GetAllTagsAsync();
+
+                    foreach (var book in items)
+                    {
+                        var tagsForBook = new List<string> { "Classiques" };
+                        if (book.Author.Contains("Verne") || book.Author.Contains("Dumas") || book.Author.Contains("Doyle")) tagsForBook.Add("Aventure");
+                        if (book.Title.Contains("tour du monde") || book.Title.Contains("Voyage")) tagsForBook.Add("Voyage");
+                        if (book.Title.Contains("Twist") || book.Title.Contains("Carol")) tagsForBook.Add("Lecture");
+                        await _dbService.SetTagsForBookAsync(book.Id, tagsForBook);
+                    }
+                    if (items.Count >= 2)
+                    {
+                        var firstTwo = items.Take(2).ToList();
+                        foreach (var b in firstTwo)
+                        {
+                            var tags = await _dbService.GetTagsForBookAsync(b.Id);
+                            var tNames = tags.Select(t => t.Name).ToList();
+                            tNames.Add("Favoris");
+                            await _dbService.SetTagsForBookAsync(b.Id, tNames);
+                        }
+                    }
+                }
+
+                _tagAssignments.Clear();
+                foreach (var tag in dbTags)
+                {
+                    var bookIds = await _dbService.GetBookIdsForTagAsync(tag.Name);
+                    _tagAssignments[tag.Name] = new HashSet<int>(bookIds);
+                }
+
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     _allBooks.Clear();
                     _allBooks.AddRange(items);
 
-                    EnsureDefaultTags();
+                    _allTags.Clear();
+                    foreach (var tag in dbTags)
+                    {
+                        _allTags.Add(new TagItem(tag.Name));
+                    }
+
+                    ApplyTagCounts();
+                    RefreshTagFilterOptions();
                     RefreshVisibleCollections();
                     IsLoading = false;
                 });
@@ -310,6 +384,20 @@ namespace ReadMe.ViewModels
             TagPickerBooks.Clear();
         }
 
+        public void ViewBooksForTag(TagItem tag)
+        {
+            if (tag == null)
+                return;
+
+            SelectedTagForBookFilter = tag;
+            IsBooksView = true;
+        }
+
+        public void ClearTagFilter()
+        {
+            SelectedTagForBookFilter = null;
+        }
+
         // --- Add Book Methods ---
         public void OpenAddBook()
         {
@@ -323,6 +411,10 @@ namespace ReadMe.ViewModels
         public void CloseAddBook()
         {
             IsAddBookVisible = false;
+            NewBookTitle = string.Empty;
+            NewBookAuthor = string.Empty;
+            NewBookEpubPath = string.Empty;
+            NewBookTag = string.Empty;
         }
 
         public async Task PickEpubAsync()
@@ -386,12 +478,14 @@ namespace ReadMe.ViewModels
                             existingTag = new TagItem(tagToFind);
                             _allTags.Add(existingTag);
                         }
-                        
+
                         if (!_tagAssignments.ContainsKey(existingTag.Name))
                         {
                             _tagAssignments[existingTag.Name] = new HashSet<int>();
                         }
                         _tagAssignments[existingTag.Name].Add(newBook.Id);
+                        
+                        await _dbService.SetTagsForBookAsync(newBook.Id, new List<string> { existingTag.Name });
                     }
 
                     MainThread.BeginInvokeOnMainThread(() =>
@@ -400,6 +494,12 @@ namespace ReadMe.ViewModels
                         RefreshTagFilterOptions();
                         RefreshVisibleCollections();
                     });
+
+                    // Reset input fields after successful addition
+                    NewBookTitle = string.Empty;
+                    NewBookAuthor = string.Empty;
+                    NewBookEpubPath = string.Empty;
+                    NewBookTag = string.Empty;
                 }
             }
             finally
@@ -416,40 +516,34 @@ namespace ReadMe.ViewModels
 
             var selectedIds = _tagPickerSourceBooks.Where(item => item.IsSelected).Select(item => item.Book.Id).ToHashSet();
             _tagAssignments[SelectedTag.Name] = selectedIds;
+            
+            Task.Run(async () =>
+            {
+                foreach (var book in _allBooks)
+                {
+                    bool isSelected = selectedIds.Contains(book.Id);
+                    var currentTags = await _dbService.GetTagsForBookAsync(book.Id);
+                    var currentTagNames = currentTags.Select(t => t.Name).ToList();
+                    
+                    if (isSelected && !currentTagNames.Contains(SelectedTag.Name))
+                    {
+                        currentTagNames.Add(SelectedTag.Name);
+                        await _dbService.SetTagsForBookAsync(book.Id, currentTagNames);
+                    }
+                    else if (!isSelected && currentTagNames.Contains(SelectedTag.Name))
+                    {
+                        currentTagNames.Remove(SelectedTag.Name);
+                        await _dbService.SetTagsForBookAsync(book.Id, currentTagNames);
+                    }
+                }
+            });
 
             ApplyTagCounts();
             CloseTagPicker();
             RefreshVisibleCollections();
         }
 
-        private void EnsureDefaultTags()
-        {
-            if (_allTags.Count == 0)
-            {
-                _allTags.Add(new TagItem("Classiques"));
-                _allTags.Add(new TagItem("Aventure"));
-                _allTags.Add(new TagItem("Voyage"));
-                _allTags.Add(new TagItem("Lecture"));
-                _allTags.Add(new TagItem("Favoris"));
-
-                SeedTagAssignments();
-            }
-
-            ApplyTagCounts();
-            RefreshTagFilterOptions();
-        }
-
-        private void SeedTagAssignments()
-        {
-            if (_allBooks.Count == 0)
-                return;
-
-            _tagAssignments["Classiques"] = _allBooks.Select(book => book.Id).ToHashSet();
-            _tagAssignments["Aventure"] = _allBooks.Where(book => book.Author.Contains("Verne", StringComparison.OrdinalIgnoreCase) || book.Author.Contains("Dumas", StringComparison.OrdinalIgnoreCase) || book.Author.Contains("Doyle", StringComparison.OrdinalIgnoreCase)).Select(book => book.Id).ToHashSet();
-            _tagAssignments["Voyage"] = _allBooks.Where(book => book.Title.Contains("tour du monde", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Voyage", StringComparison.OrdinalIgnoreCase)).Select(book => book.Id).ToHashSet();
-            _tagAssignments["Lecture"] = _allBooks.Where(book => book.Title.Contains("Twist", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Carol", StringComparison.OrdinalIgnoreCase)).Select(book => book.Id).ToHashSet();
-            _tagAssignments["Favoris"] = new HashSet<int>(_allBooks.Take(2).Select(book => book.Id));
-        }
+        // EnsureDefaultTags and SeedTagAssignments were removed
 
         private void ApplyTagCounts()
         {
@@ -470,6 +564,13 @@ namespace ReadMe.ViewModels
         {
             IEnumerable<Book> query = _allBooks;
 
+            // Filter by selected tag if viewing tag books
+            if (IsViewingTagBooks && SelectedTagForBookFilter != null)
+            {
+                var tagBookIds = GetTagAssignments(SelectedTagForBookFilter.Name);
+                query = query.Where(book => tagBookIds.Contains(book.Id));
+            }
+
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 query = query.Where(book =>
@@ -478,7 +579,7 @@ namespace ReadMe.ViewModels
                     (book.Description?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false));
             }
 
-            if (!string.IsNullOrWhiteSpace(SelectedTagFilter) && SelectedTagFilter != "Tous les tags")
+            if (!string.IsNullOrWhiteSpace(SelectedTagFilter) && SelectedTagFilter != "Tous les tags" && !IsViewingTagBooks)
             {
                 var ids = GetTagAssignments(SelectedTagFilter);
                 query = query.Where(book => ids.Contains(book.Id));
@@ -488,7 +589,7 @@ namespace ReadMe.ViewModels
             {
                 "Titre" => query.OrderBy(book => book.Title),
                 "Auteur" => query.OrderBy(book => book.Author),
-                _ => query.OrderByDescending(book => book.LastOpenedDate)
+                _ => query.OrderByDescending(book => book.InsertionDate)
             };
 
             MainThread.BeginInvokeOnMainThread(() =>

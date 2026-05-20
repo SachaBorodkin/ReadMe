@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 using System.Text.Json.Serialization;
 
 namespace ReadMe.Models
@@ -42,6 +42,10 @@ namespace ReadMe.Models
         public int LastPageOpened { get; set; }
 
         public DateTime LastOpenedDate { get; set; }
+
+        public DateTime InsertionDate { get; set; } = DateTime.Now;
+
+        public byte[] EpubContent { get; set; }
 
         [Ignore]
         public double Progress => TotalPages > 0 ? (double)LastPageOpened / TotalPages : 0;

@@ -80,6 +80,23 @@ namespace ReadMe
             }
         }
 
+        private void OnTagTapped(object sender, TappedEventArgs e)
+        {
+            if (e.Parameter is TagItem tag && BindingContext is MainViewModel vm)
+            {
+                vm.ViewBooksForTag(tag);
+            }
+        }
+
+        private void OnClearTagFilterClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                vm.ClearTagFilter();
+                vm.SetTagsView();
+            }
+        }
+
         private void OnAddBookOpenClicked(object sender, EventArgs e)
         {
             if (BindingContext is MainViewModel vm)
