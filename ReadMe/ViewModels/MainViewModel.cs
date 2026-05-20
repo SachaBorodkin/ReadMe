@@ -190,6 +190,65 @@ namespace ReadMe.ViewModels
         }
         // --- Add Book Properties End ---
 
+        // --- Create Tag Properties ---
+        private bool _isCreateTagVisible;
+        private string _newTagName = string.Empty;
+
+        public bool IsCreateTagVisible
+        {
+            get => _isCreateTagVisible;
+            set { if (_isCreateTagVisible != value) { _isCreateTagVisible = value; OnPropertyChanged(); } }
+        }
+
+        public string NewTagName
+        {
+            get => _newTagName;
+            set { if (_newTagName != value) { _newTagName = value; OnPropertyChanged(); } }
+        }
+        
+        // --- Book Tag Picker Properties ---
+        private bool _isBookTagPickerVisible;
+        private string _bookTagPickerSearchText = string.Empty;
+        private Book _selectedBookForTagging;
+
+        public ObservableCollection<TagSelectionItem> BookTagPickerTags { get; } = new();
+
+        public bool IsBookTagPickerVisible
+        {
+            get => _isBookTagPickerVisible;
+            set { if (_isBookTagPickerVisible != value) { _isBookTagPickerVisible = value; OnPropertyChanged(); } }
+        }
+
+        public string BookTagPickerSearchText
+        {
+            get => _bookTagPickerSearchText;
+            set
+            {
+                if (_bookTagPickerSearchText != value)
+                {
+                    _bookTagPickerSearchText = value ?? string.Empty;
+                    OnPropertyChanged();
+                    RefreshBookTagPickerTags();
+                }
+            }
+        }
+
+        public Book SelectedBookForTagging
+        {
+            get => _selectedBookForTagging;
+            set
+            {
+                if (_selectedBookForTagging != value)
+                {
+                    _selectedBookForTagging = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(BookTagPickerTitle));
+                }
+            }
+        }
+
+        public string BookTagPickerTitle => SelectedBookForTagging == null ? "Tags du livre" : $"Tags: {SelectedBookForTagging.Title}";
+
         public string TagPickerSearchText
         {
             get => _tagPickerSearchText;
@@ -509,6 +568,125 @@ namespace ReadMe.ViewModels
         }
         // --- Add Book Methods End ---
 
+        // --- Create Tag Methods ---
+        public void OpenCreateTag()
+        {
+            NewTagName = string.Empty;
+            IsCreateTagVisible = true;
+        }
+
+        public void CloseCreateTag()
+        {
+            IsCreateTagVisible = false;
+            NewTagName = string.Empty;
+        }
+
+        public async Task ConfirmCreateTagAsync()
+        {
+            if (string.IsNullOrWhiteSpace(NewTagName)) return;
+            
+            var tagToFind = NewTagName.Trim();
+            var existingTag = _allTags.FirstOrDefault(t => t.Name.Equals(tagToFind, StringComparison.OrdinalIgnoreCase));
+            if (existingTag == null)
+            {
+                await _dbService.GetOrCreateTagAsync(tagToFind);
+                var newTagItem = new TagItem(tagToFind);
+                _allTags.Add(newTagItem);
+                _tagAssignments[tagToFind] = new HashSet<int>();
+                
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    RefreshTagFilterOptions();
+                    RefreshVisibleCollections();
+                });
+            }
+            CloseCreateTag();
+        }
+
+        // --- Book Tag Picker Methods ---
+        private readonly List<TagSelectionItem> _bookTagPickerSourceTags = new();
+
+        public void OpenBookTagPicker(Book book)
+        {
+            if (book == null) return;
+            
+            SelectedBookForTagging = book;
+            BookTagPickerSearchText = string.Empty;
+            _bookTagPickerSourceTags.Clear();
+            BookTagPickerTags.Clear();
+
+            foreach (var tag in _allTags)
+            {
+                bool isAssociated = GetTagAssignments(tag.Name).Contains(book.Id);
+                var item = new TagSelectionItem(tag)
+                {
+                    IsSelected = isAssociated
+                };
+
+                _bookTagPickerSourceTags.Add(item);
+                BookTagPickerTags.Add(item);
+            }
+
+            IsBookTagPickerVisible = true;
+        }
+
+        public void CloseBookTagPicker()
+        {
+            IsBookTagPickerVisible = false;
+            SelectedBookForTagging = null;
+            BookTagPickerTags.Clear();
+        }
+
+        public void ConfirmBookTagPickerSelection()
+        {
+            if (SelectedBookForTagging == null) return;
+
+            var selectedTagNames = _bookTagPickerSourceTags.Where(item => item.IsSelected).Select(item => item.Tag.Name).ToList();
+            var bookId = SelectedBookForTagging.Id;
+
+            // Update in memory
+            foreach (var tag in _allTags)
+            {
+                var tagSet = GetTagAssignments(tag.Name);
+                if (selectedTagNames.Contains(tag.Name))
+                {
+                    tagSet.Add(bookId);
+                }
+                else
+                {
+                    tagSet.Remove(bookId);
+                }
+            }
+
+            // Sync to DB
+            Task.Run(async () =>
+            {
+                await _dbService.SetTagsForBookAsync(bookId, selectedTagNames);
+            });
+
+            ApplyTagCounts();
+            CloseBookTagPicker();
+            RefreshVisibleCollections();
+        }
+        
+        private void RefreshBookTagPickerTags()
+        {
+            if (!IsBookTagPickerVisible) return;
+
+            IEnumerable<TagSelectionItem> query = _bookTagPickerSourceTags;
+
+            if (!string.IsNullOrWhiteSpace(BookTagPickerSearchText))
+            {
+                query = query.Where(item => item.Tag.Name.Contains(BookTagPickerSearchText, StringComparison.OrdinalIgnoreCase));
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                BookTagPickerTags.Clear();
+                foreach (var item in query) BookTagPickerTags.Add(item);
+            });
+        }
+
         public void ConfirmTagPickerSelection()
         {
             if (SelectedTag == null)
@@ -558,6 +736,7 @@ namespace ReadMe.ViewModels
             RefreshVisibleBooks();
             RefreshVisibleTags();
             RefreshTagPickerBooks();
+            RefreshBookTagPickerTags();
         }
 
         private void RefreshVisibleBooks()

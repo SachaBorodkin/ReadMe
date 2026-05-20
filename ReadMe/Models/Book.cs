@@ -5,7 +5,7 @@ namespace ReadMe.Models
 {
     public class Book
     {
-        [PrimaryKey]
+        [PrimaryKey, AutoIncrement]
         [JsonPropertyName("id")]
         public int Id { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using ReadMe.Models;
+using ReadMe.Models;
 using ReadMe.ViewModels;
 using ReadMe.Models;
 namespace ReadMe
@@ -142,6 +142,68 @@ namespace ReadMe
                 {
                     await vm.DeleteBookAsync(book);
                 }
+            }
+        }
+
+        private void OnOpenCreateTagClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                vm.OpenCreateTag();
+            }
+        }
+
+        private void OnCloseCreateTagClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                vm.CloseCreateTag();
+            }
+        }
+
+        private async void OnConfirmCreateTagClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                await vm.ConfirmCreateTagAsync();
+            }
+        }
+
+        private void OnOpenBookTagPickerClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is Book book && BindingContext is MainViewModel vm)
+            {
+                vm.OpenBookTagPicker(book);
+            }
+        }
+
+        private void OnCloseBookTagPickerClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                vm.CloseBookTagPicker();
+            }
+        }
+
+        private void OnConfirmBookTagPickerClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                vm.ConfirmBookTagPickerSelection();
+            }
+        }
+
+        private void OnSelectionItemTapped(object sender, TappedEventArgs e)
+        {
+            var context = (sender as BindableObject)?.BindingContext ?? e.Parameter;
+            
+            if (context is TagSelectionItem tagItem)
+            {
+                tagItem.IsSelected = !tagItem.IsSelected;
+            }
+            else if (context is BookSelectionItem bookItem)
+            {
+                bookItem.IsSelected = !bookItem.IsSelected;
             }
         }
 
