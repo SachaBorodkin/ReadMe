@@ -121,6 +121,14 @@ namespace ReadMe
             }
         }
 
+        private async void OnFetchApiBooksClicked(object sender, EventArgs e)
+        {
+            if (BindingContext is MainViewModel vm)
+            {
+                await vm.FetchBooksFromApiAsync();
+            }
+        }
+
         private async void OnAddBookConfirmClicked(object sender, EventArgs e)
         {
             if (BindingContext is MainViewModel vm)
@@ -204,6 +212,18 @@ namespace ReadMe
             else if (context is BookSelectionItem bookItem)
             {
                 bookItem.IsSelected = !bookItem.IsSelected;
+            }
+        }
+
+        private async void OnDeleteTagClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.BindingContext is TagItem tag && BindingContext is MainViewModel vm)
+            {
+                bool confirm = await DisplayAlert("Confirmer", $"Voulez-vous vraiment supprimer le tag '{tag.Name}' ?", "Oui", "Non");
+                if (confirm)
+                {
+                    await vm.DeleteTagAsync(tag);
+                }
             }
         }
 

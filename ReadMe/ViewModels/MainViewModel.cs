@@ -10,6 +10,7 @@ namespace ReadMe.ViewModels
     {
         private readonly DatabaseService _dbService;
         private readonly LocalBooksService _localBooksService;
+        private readonly BookApiService _bookApiService;
         private readonly List<Book> _allBooks = new();
         private readonly List<TagItem> _allTags = new();
         private readonly List<BookSelectionItem> _tagPickerSourceBooks = new();
@@ -296,10 +297,11 @@ namespace ReadMe.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public MainViewModel(DatabaseService dbService, LocalBooksService localBooksService)
+        public MainViewModel(DatabaseService dbService, LocalBooksService localBooksService, BookApiService bookApiService)
         {
             _dbService = dbService;
             _localBooksService = localBooksService;
+            _bookApiService = bookApiService;
             _ = LoadBooksAsync();
         }
 
@@ -392,6 +394,41 @@ namespace ReadMe.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading books: {ex.Message}\n{ex.StackTrace}");
+                IsLoading = false;
+            }
+        }
+
+        public async Task FetchBooksFromApiAsync()
+        {
+            try
+            {
+                IsLoading = true;
+                CloseAddBook();
+                var apiBooks = await _bookApiService.FetchBooksFromApiAsync();
+                
+                if (apiBooks != null && apiBooks.Any())
+                {
+                    foreach (var book in apiBooks)
+                    {
+                        book.InsertionDate = DateTime.Now;
+                        if (string.IsNullOrEmpty(book.CoverImage))
+                        {
+                            book.CoverImage = "book_icon.png";
+                        }
+                        
+                        await _dbService.SaveBookAsync(book);
+                        
+                        _allBooks.Insert(0, book);
+                    }
+
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        RefreshVisibleCollections();
+                    });
+                }
+            }
+            finally
+            {
                 IsLoading = false;
             }
         }
@@ -601,6 +638,26 @@ namespace ReadMe.ViewModels
                 });
             }
             CloseCreateTag();
+        }
+
+        public async Task DeleteTagAsync(TagItem tag)
+        {
+            if (tag == null) return;
+            
+            await _dbService.DeleteTagAsync(tag.Name);
+            
+            _tagAssignments.Remove(tag.Name);
+            var itemToRemove = _allTags.FirstOrDefault(t => t.Name == tag.Name);
+            if (itemToRemove != null)
+            {
+                _allTags.Remove(itemToRemove);
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                RefreshTagFilterOptions();
+                RefreshVisibleCollections();
+            });
         }
 
         // --- Book Tag Picker Methods ---

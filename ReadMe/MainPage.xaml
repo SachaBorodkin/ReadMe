@@ -161,13 +161,8 @@
                                         <TapGestureRecognizer Tapped="OnBookTapped" CommandParameter="{Binding .}" />
                                     </Frame.GestureRecognizers>
                                     <Grid ColumnDefinitions="72, *, Auto, Auto" ColumnSpacing="14">
-                                        <Frame Grid.Column="0" Padding="0" CornerRadius="10" HeightRequest="96" WidthRequest="72" HasShadow="False" BorderColor="#E2E8F0" BackgroundColor="#0F172A">
-                                            <Label Text="EPUB"
-                                                   HorizontalOptions="Center"
-                                                   VerticalOptions="Center"
-                                                   FontSize="11"
-                                                   FontAttributes="Bold"
-                                                   TextColor="#14B8A6" />
+                                        <Frame Grid.Column="0" Padding="0" CornerRadius="10" HeightRequest="96" WidthRequest="72" HasShadow="False" BorderColor="#E2E8F0" BackgroundColor="#0F172A" IsClippedToBounds="True">
+                                            <Image Source="{Binding CoverImage}" Aspect="AspectFill" />
                                         </Frame>
                                         <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
                                             <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18" TextColor="#0F172A" LineBreakMode="TailTruncation" />
@@ -240,14 +235,22 @@
                                             <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
                                             <Label Text="{Binding AssociatedBooksCount, StringFormat='{0} livres'}" FontSize="12" TextColor="#64748B" />
                                         </VerticalStackLayout>
-                                        <Button Grid.Column="1"
-                                                Text="Associer un livre"
-                                                BindingContext="{Binding .}"
-                                                Clicked="OnOpenTagPickerClicked"
-                                                BackgroundColor="#10B981"
-                                                TextColor="White"
-                                                CornerRadius="12"
-                                                Padding="14,10" />
+                                        <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                                            <Button Text="Associer"
+                                                    BindingContext="{Binding .}"
+                                                    Clicked="OnOpenTagPickerClicked"
+                                                    BackgroundColor="#10B981"
+                                                    TextColor="White"
+                                                    CornerRadius="12"
+                                                    Padding="12,10" />
+                                            <Button Text="🗑️"
+                                                    BindingContext="{Binding .}"
+                                                    Clicked="OnDeleteTagClicked"
+                                                    BackgroundColor="#EF4444"
+                                                    TextColor="White"
+                                                    CornerRadius="12"
+                                                    Padding="10" />
+                                        </HorizontalStackLayout>
                                     </Grid>
                                 </Frame>
                             </DataTemplate>
@@ -266,6 +269,7 @@
                        BackgroundColor="White"
                        VerticalOptions="Center"
                        HorizontalOptions="Center"
+                       MaximumHeightRequest="500"
                        HasShadow="True">
                     <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="12">
                         <Grid ColumnDefinitions="*, Auto">
@@ -339,6 +343,13 @@
                                 TextColor="#0F172A"
                                 CornerRadius="12"
                                 Padding="12,10" />
+                        <Label Text="OU" HorizontalOptions="Center" FontSize="12" TextColor="#94A3B8" FontAttributes="Bold" />
+                        <Button Text="Télécharger depuis l'API"
+                                Clicked="OnFetchApiBooksClicked"
+                                BackgroundColor="#14B8A6"
+                                TextColor="White"
+                                CornerRadius="12"
+                                Padding="12,10" />
                         <Label Text="{Binding NewBookEpubFileName}" FontSize="12" TextColor="#64748B" HorizontalOptions="Center" />
 
                         <Entry Text="{Binding NewBookTitle, Mode=TwoWay}" Placeholder="Titre du livre" TextColor="Black" />
@@ -401,6 +412,7 @@
                        BackgroundColor="White"
                        VerticalOptions="Center"
                        HorizontalOptions="Center"
+                       MaximumHeightRequest="500"
                        HasShadow="True">
                     <Grid RowDefinitions="Auto, Auto, *, Auto" RowSpacing="12">
                         <Grid ColumnDefinitions="*, Auto">

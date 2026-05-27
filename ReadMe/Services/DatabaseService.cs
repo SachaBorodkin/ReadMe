@@ -158,5 +158,21 @@ namespace ReadMe.Services
                 await _database.InsertAsync(new BookTag { BookId = bookId, TagId = tag.Id });
             }
         }
+
+        public async Task DeleteTagAsync(string tagName)
+        {
+            await Init();
+            var tag = await _database.Table<Tag>().Where(t => t.Name == tagName).FirstOrDefaultAsync();
+            if (tag != null)
+            {
+                var links = await _database.Table<BookTag>().Where(bt => bt.TagId == tag.Id).ToListAsync();
+                foreach(var link in links)
+                {
+                    await _database.DeleteAsync(link);
+                }
+                
+                await _database.DeleteAsync(tag);
+            }
+        }
     }
 }

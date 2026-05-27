@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using ReadMe.Services;
 using ReadMe.ViewModels;
@@ -20,10 +20,11 @@ namespace ReadMe
 
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<LocalBooksService>();
+            builder.Services.AddSingleton<BookApiService>();
             builder.Services.AddSingleton<EpubReaderService>();
-            builder.Services.AddSingleton<MainViewModel>();
+            builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddSingleton<ReaderViewModel>();
-            builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddTransient<MainPage>();
             builder.Services.AddSingleton<ReaderPage>();
 
             var mauiApp = app.Build();

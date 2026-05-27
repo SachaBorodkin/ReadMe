@@ -101,14 +101,53 @@ namespace ReadMe.Services
                 if (spine != null && manifest != null)
                 {
                     var manifestItems = manifest.Descendants(opfNs + "item")
-                        .ToDictionary(x => x.Attribute("id")?.Value ?? "", x => x.Attribute("href")?.Value ?? "");
+                        .ToDictionary(x => x.Attribute("id")?.Value ?? "", x => x);
+
+                    // Extract cover
+                    string coverHref = null;
+                    var coverItemEpub3 = manifestItems.Values.FirstOrDefault(x => x.Attribute("properties")?.Value.Contains("cover-image") == true);
+                    if (coverItemEpub3 != null)
+                    {
+                        coverHref = coverItemEpub3.Attribute("href")?.Value;
+                    }
+                    else if (metadata != null)
+                    {
+                        var metaCover = metadata.Descendants(opfNs + "meta").FirstOrDefault(x => x.Attribute("name")?.Value == "cover");
+                        if (metaCover != null)
+                        {
+                            var coverId = metaCover.Attribute("content")?.Value;
+                            if (!string.IsNullOrEmpty(coverId) && manifestItems.TryGetValue(coverId, out var item))
+                            {
+                                coverHref = item.Attribute("href")?.Value;
+                            }
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(coverHref))
+                    {
+                        var coverPath = Path.Combine(opfDirectory, coverHref).Replace("\\", "/");
+                        var coverEntry = zipArchive.GetEntry(coverPath);
+                        if (coverEntry != null)
+                        {
+                            var tempCoverPath = Path.Combine(FileSystem.AppDataDirectory, $"{Guid.NewGuid()}{Path.GetExtension(coverHref)}");
+                            using (var coverStream = coverEntry.Open())
+                            using (var fileStream = File.Create(tempCoverPath))
+                            {
+                                await coverStream.CopyToAsync(fileStream);
+                            }
+                            epubContent.CoverImagePath = tempCoverPath;
+                        }
+                    }
 
                     int chapterIndex = 0;
                     foreach (var spineItem in spine.Descendants(opfNs + "itemref"))
                     {
                         var itemId = spineItem.Attribute("idref")?.Value;
-                        if (itemId != null && manifestItems.TryGetValue(itemId, out var href))
+                        if (itemId != null && manifestItems.TryGetValue(itemId, out var itemElement))
                         {
+                            var href = itemElement.Attribute("href")?.Value;
+                            if (href == null) continue;
+
                             var filePath = Path.Combine(opfDirectory, href);
                             filePath = filePath.Replace("\\", "/");
 

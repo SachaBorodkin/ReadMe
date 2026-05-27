@@ -130,6 +130,15 @@ namespace ReadMe.Services
                 var fileName = Path.GetFileNameWithoutExtension(epubFilePath);
                 var (author, title) = ParseFilename(fileName);
 
+                string coverPath = "book_icon.png";
+                try {
+                    var epubService = new EpubReaderService();
+                    var epubContent = await epubService.LoadEpubAsync(epubFilePath);
+                    if (!string.IsNullOrEmpty(epubContent.CoverImagePath)) {
+                        coverPath = epubContent.CoverImagePath;
+                    }
+                } catch { }
+
                 var book = new Book
                 {
                     Id = id,
@@ -137,7 +146,7 @@ namespace ReadMe.Services
                     Author = author,
                     EpubFilePath = epubFilePath,
                     TotalPages = await GetEpubPageCountAsync(epubFilePath),
-                    CoverImage = "book_icon.png", 
+                    CoverImage = coverPath, 
                     Description = $"A book by {author}",
                     Language = "en",
                     UploadedAt = DateTime.Now.ToString("yyyy-MM-dd"),
@@ -236,6 +245,15 @@ namespace ReadMe.Services
 
                 int nextId = _cachedBooks.Any() ? _cachedBooks.Max(b => b.Id) + 1 : 1;
 
+                string coverPath = "book_icon.png";
+                try {
+                    var epubService = new EpubReaderService();
+                    var epubContent = await epubService.LoadEpubAsync(destinationFolderFile);
+                    if (!string.IsNullOrEmpty(epubContent.CoverImagePath)) {
+                        coverPath = epubContent.CoverImagePath;
+                    }
+                } catch { }
+
                 var book = new Book
                 {
                     Id = nextId,
@@ -243,7 +261,7 @@ namespace ReadMe.Services
                     Author = author,
                     EpubFilePath = destinationFolderFile,
                     TotalPages = await GetEpubPageCountAsync(destinationFolderFile),
-                    CoverImage = "book_icon.png", 
+                    CoverImage = coverPath, 
                     Description = $"A book by {author}",
                     Language = "en",
                     UploadedAt = DateTime.Now.ToString("yyyy-MM-dd"),
